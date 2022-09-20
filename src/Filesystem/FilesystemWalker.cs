@@ -2,7 +2,7 @@
 
 public class FilesystemWalker
 {
-    public static async Task Walk(string mountPoint, CancellationToken stoppingToken, Action<LustreFile> processor)
+    public static async Task Walk(string mountPoint, CancellationToken stoppingToken, Action<FileRecord> processor)
     {
         var roots = new Stack<string>();
         roots.Push(mountPoint);
@@ -23,7 +23,7 @@ public class FilesystemWalker
                 // Root has been removed from under us while processing.
                 continue;
             }
-            
+
             foreach (string file in childFiles)
             {
                 if (stoppingToken.IsCancellationRequested)
@@ -31,12 +31,12 @@ public class FilesystemWalker
                     return;
                 }
 
-                try {
+                try
+                {
                     var info = new FileInfo(file);
-                    if (info.LinkTarget != null)
+                    if (info.LinkTarget == null)
                     {
-                        processor(new LustreFile(root, info.Name, info.Length,
-                            info.LastAccessTime.ToFileTimeUtc()));
+                        processor(new FileRecord(info.FullName, info.LastAccessTime.ToFileTimeUtc()));
                     }
                 }
                 catch (FileNotFoundException e)
@@ -51,6 +51,5 @@ public class FilesystemWalker
                 roots.Push(childRoot);
             }
         }
-
     }
 }
