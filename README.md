@@ -10,37 +10,13 @@ When an asset is required for orchestration, it will potentially be provisioned 
 This is where Lustre Collector comes in.
 Every time the platform accesses an asset via the local-storage that information is recorded and used to determine which of the flies in the cache are infrequently accessed and can be purged with little to zero impact on orchestration and provisioning.
 
-## Implementation Strategy
+## Deployment
 
-Previously implementations of this solution relied on walking entire filesystem trees of networked filesystems on a schedule, which resulted in both inaccurate data and generating far more IO than would be necessary.
-
-
-As of Lustre 2.0 the MDS has a changelog feature that can record [all operations](https://github.com/DDNStorage/lustre_manual_markdown/blob/master/03.01-Monitoring%20a%20Lustre%20File%20System.md#lustre-changelogs) that happen in a Lustre filesystem.
-Note that access time modifications and open events are not recorded by default, but can be recorded by setting the changelog mask:
-
-```shell
-> # lctl set_param mdd.lustre-MDT0000.changelog_mask=OPEN ATIME CREAT UNLINK
-```
-
-The changelog is a simple fixed size ring buffer that will begin to purge old records as the storage fills.
-However, once a changelog reader has been registered Lustre will stop purging records that have not been marked as seen by all readers.
-
-Every record stored contains the following information for every event:
-```
-operation_type(numerical/text) 
-timestamp 
-datestamp 
-flags 
-t=target_FID 
-ef=extended_flags
-u=uid:gid
-nid=client_NID
-p=parent_FID 
-target_name
-```
-
-From a `parent_FID` and a `target_name` an event is recorded for the full path by running:
-
-```shell
-> $ "$(lfs fid2path $parent_FID)/$target_name"
-```
+The application can be built as a standalone container image and deployed to any container runtime.
+There are currently 3 values that are configurable as environment variables in the container:
+- LUSTRE_mountPoint
+  - The path, local to the container, where the filesystem to be monitored is located. NOTE: it's assumed this mount point encapsulates the entire filesystem. Mounting a subdirectory will create incorrect disk usage reports.
+- LUSTRE_cleanupPeriod
+  - The frequency, in milliseconds, that the cleanup routine will be executed. The cleanup routine will compare disk usage with a configured usage threshold and begin purging old files.
+- LUSTRE_cleanupThreshold
+  - A value between [0, 100) representing a percentage of total disk space usage before considering cleanup. For example, a value of 10 will begin cleanup when there is 10% or less free space available.  
