@@ -9,9 +9,7 @@ var configuration = new ConfigurationBuilder()
 IHost host = Host.CreateDefaultBuilder(args)
     .ConfigureServices(services =>
     {
-        var mountPoint = configuration.GetValue<string>("mountPoint");
-        var cleanupThreshold = configuration.GetValue<int>("cleanupThreshold", 2000); // default to every 2000ms
-        var cleanupPeriod = configuration.GetValue<int>("cleanupPeriod", 20); // default to 20%
+        services.Configure<FileCleanupConfiguration>("FileCleanup", configuration);
         services.AddSingleton<IFilesystemChangeWatcher, NativeFilesystemChangeWatcher>();
         services.AddSingleton<SortedSet<FileRecord>>(x =>
             new SortedSet<FileRecord>(new LustreFileAccessTimeComparer()));
