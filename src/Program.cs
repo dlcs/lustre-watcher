@@ -13,19 +13,8 @@ IHost host = Host.CreateDefaultBuilder(args)
         services.AddSingleton<IFilesystemChangeWatcher, NativeFilesystemChangeWatcher>();
         services.AddSingleton<SortedSet<FileRecord>>(x =>
             new SortedSet<FileRecord>(new LustreFileAccessTimeComparer()));
-        services.AddHostedService(x =>
-        {
-            return new FileCleanupWorker(mountPoint, x.GetRequiredService<SortedSet<FileRecord>>(), cleanupPeriod,
-                cleanupThreshold);
-        });
-        services.AddHostedService(x =>
-        {
-            return new FileStatisticsCollectionWorker(
-                x.GetRequiredService<ILogger<FileStatisticsCollectionWorker>>(),
-                x.GetRequiredService<SortedSet<FileRecord>>(),
-                mountPoint,
-                x.GetRequiredService<IFilesystemChangeWatcher>());
-        });
+        services.AddHostedService<FileCleanupWorker>();
+        services.AddHostedService<FileStatisticsCollectionWorker>();
     })
     .Build();
 
