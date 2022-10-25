@@ -21,7 +21,7 @@ public class FileCleanupConfiguration : IValidatableObject
             yield return new ValidationResult("MountPoint must exist");
         }
 
-        var cleanupThresholdValid = CleanupThreshold > 1 && CleanupThreshold < 100;
+        var cleanupThresholdValid = CleanupThreshold is > 1 and < 100;
         valid &= cleanupThresholdValid;
 
         if (!cleanupThresholdValid)
