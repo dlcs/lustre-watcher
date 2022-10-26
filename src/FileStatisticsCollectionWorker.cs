@@ -33,7 +33,7 @@ public class FileStatisticsCollectionWorker : BackgroundService
 
         if (_activeFiles.Count > 0)
         {
-            _logger.LogInformation($"Created initial set of filesystem records: {string.Join('\n', _activeFiles)}");
+            _logger.LogInformation($"Created initial set of filesystem records: {string.Join('\n', _activeFiles)}", _activeFiles);
         }
         else
         {
@@ -47,12 +47,12 @@ public class FileStatisticsCollectionWorker : BackgroundService
             {
                 if (change.Kind is FilesystemChangeEventKind.Accessed or FilesystemChangeEventKind.Created)
                 {
-                    _logger.LogInformation($"File Record added {fileRecord}");
+                    _logger.LogInformation($"File Record added {fileRecord}", fileRecord);
                     _activeFiles.Add(fileRecord);
                 }
                 else
                 {
-                    _logger.LogInformation($@"File Record removed {fileRecord}");
+                    _logger.LogInformation($@"File Record removed {fileRecord}", fileRecord);
                     _activeFiles.Remove(fileRecord);
                 }
             }
