@@ -40,7 +40,7 @@ public class FileStatisticsCollectionWorker : BackgroundService
             _logger.LogInformation("Filesystem is empty. Created empty set of filesystem records.");
         }
 
-        await foreach (var change in _changeWatcher.Watch(new FileInfo(_mountPoint)).WithCancellation(stoppingToken))
+        await foreach (var change in _changeWatcher.Watch(new DirectoryInfo(_mountPoint)).WithCancellation(stoppingToken))
         {
             var fileRecord = new FileRecord(change.Path, DateTime.UtcNow.ToFileTimeUtc());
             lock (_activeFiles)

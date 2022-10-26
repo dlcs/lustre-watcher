@@ -4,7 +4,7 @@ namespace LustreCollector.Filesystem;
 
 public class NativeFilesystemChangeWatcher : IFilesystemChangeWatcher
 {
-    public IAsyncEnumerable<FilesystemChangeEvent> Watch(FileInfo root)
+    public IAsyncEnumerable<FilesystemChangeEvent> Watch(DirectoryInfo root)
     {
         var changes = Channel.CreateUnbounded<FilesystemChangeEvent>();
         var watcher = new FileSystemWatcher();
