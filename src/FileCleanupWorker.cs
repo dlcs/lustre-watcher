@@ -6,11 +6,16 @@ public class FileCleanupWorker : BackgroundService
 {
     private readonly SortedSet<FileRecord> _activeFiles;
     private readonly IOptionsMonitor<FileCleanupConfiguration> _configuration;
+    private readonly ILogger<FileCleanupWorker> _logger;
 
-    public FileCleanupWorker(SortedSet<FileRecord> activeFiles, IOptionsMonitor<FileCleanupConfiguration> configuration)
+    public FileCleanupWorker(
+        SortedSet<FileRecord> activeFiles,
+        IOptionsMonitor<FileCleanupConfiguration> configuration,
+        ILogger<FileCleanupWorker> logger)
     {
         _activeFiles = activeFiles;
         _configuration = configuration;
+        _logger = logger;
     }
 
     private bool IsUnderFreeSpaceThreshold()
@@ -45,5 +50,7 @@ public class FileCleanupWorker : BackgroundService
                 _activeFiles.RemoveWhere(item => removalSet.Contains(item));
             }
         }
+        
+        _logger.LogInformation("FileCleanupWorker stopping");
     }
 }
