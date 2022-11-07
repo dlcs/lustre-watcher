@@ -10,9 +10,6 @@
 
     <ItemGroup>
         <PackageReference Include="Microsoft.Extensions.Hosting" Version="6.0.1" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <Folder Include="Filesystem" />
+        <PackageReference Include="Microsoft.Extensions.Options.DataAnnotations" Version="6.0.0" />
     </ItemGroup>
 </Project>

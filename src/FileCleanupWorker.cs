@@ -1,11 +1,13 @@
+using Microsoft.Extensions.Options;
+
 namespace LustreCollector;
 
 public class FileCleanupWorker : BackgroundService
 {
     private readonly SortedSet<FileRecord> _activeFiles;
-    private readonly FileCleanupConfiguration _configuration;
+    private readonly IOptionsMonitor<FileCleanupConfiguration> _configuration;
 
-    public FileCleanupWorker(SortedSet<FileRecord> activeFiles, FileCleanupConfiguration configuration)
+    public FileCleanupWorker(SortedSet<FileRecord> activeFiles, IOptionsMonitor<FileCleanupConfiguration> configuration)
     {
         _activeFiles = activeFiles;
         _configuration = configuration;
@@ -13,15 +15,16 @@ public class FileCleanupWorker : BackgroundService
 
     private bool IsUnderFreeSpaceThreshold()
     {
-        var mountInfo = new DriveInfo(_configuration.MountPoint);
-        return mountInfo.AvailableFreeSpace / mountInfo.TotalSize * 100 < _configuration.CleanupThreshold;
+        var configurationCurrentValue = _configuration.CurrentValue;
+        var mountInfo = new DriveInfo(configurationCurrentValue.MountPoint);
+        return mountInfo.AvailableFreeSpace / mountInfo.TotalSize * 100 < configurationCurrentValue.CleanupThreshold;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         while (!stoppingToken.IsCancellationRequested)
         {
-            await Task.Delay(_configuration.CleanupPeriod, stoppingToken);
+            await Task.Delay(_configuration.CurrentValue.CleanupPeriod, stoppingToken);
 
             if (!IsUnderFreeSpaceThreshold()) continue;
 

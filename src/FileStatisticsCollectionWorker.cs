@@ -1,4 +1,5 @@
 using LustreCollector.Filesystem;
+using Microsoft.Extensions.Options;
 
 namespace LustreCollector;
 
@@ -11,12 +12,12 @@ public class FileStatisticsCollectionWorker : BackgroundService
     private readonly SortedSet<FileRecord> _activeFiles;
 
     public FileStatisticsCollectionWorker(ILogger<FileStatisticsCollectionWorker> logger,
-        SortedSet<FileRecord> activeFiles, string mountPoint,
+        SortedSet<FileRecord> activeFiles, IOptionsMonitor<FileCleanupConfiguration> config,
         IFilesystemChangeWatcher changeWatcher)
     {
         _logger = logger;
         _activeFiles = activeFiles;
-        _mountPoint = mountPoint;
+        _mountPoint = config.CurrentValue.MountPoint;
         _changeWatcher = changeWatcher;
     }
 
