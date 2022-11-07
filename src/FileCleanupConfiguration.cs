@@ -13,7 +13,7 @@ public class FileCleanupConfiguration : IValidatableObject
     {
         var valid = true;
 
-        var mountPointExists = File.Exists(MountPoint);
+        var mountPointExists = Directory.Exists(MountPoint);
         valid &= mountPointExists;
 
         if (!mountPointExists)
