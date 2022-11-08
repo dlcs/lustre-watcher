@@ -23,3 +23,5 @@
 **/values.dev.yaml
 LICENSE
 README.md
+appsettings.Development.json
+Properties/launchSettings.json
