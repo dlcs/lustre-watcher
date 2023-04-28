@@ -47,7 +47,7 @@ public class FileCleanupWorker : BackgroundService
                 CleanupStaleFiles(stoppingToken);
             }
 
-            if (!haveActiveFiles)
+            /*if (!haveActiveFiles)
             {
                 _logger.LogInformation("No active files, trying to walk files again");
                 await FilesystemWalker.Walk(_configuration.CurrentValue.MountPoint, stoppingToken, file =>
@@ -57,7 +57,7 @@ public class FileCleanupWorker : BackgroundService
                         _activeFiles.Add(file);
                     }
                 });
-            }
+            }*/
 
             /*lock (_activeFiles)
             {
