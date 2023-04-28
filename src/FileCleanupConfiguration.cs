@@ -4,10 +4,25 @@ namespace LustreCollector;
 
 public class FileCleanupConfiguration : IValidatableObject
 {
+    /// <summary>
+    /// The path, local to the container, where the filesystem to be monitored is located
+    /// </summary>
     public string MountPoint { get; set; }
-
+    
+    /// <summary>
+    /// A value between [0, 100) representing a percentage of total disk space usage before considering cleanup.
+    /// </summary>
     public int CleanupThreshold { get; set; } = 10;
+    
+    /// <summary>
+    /// The frequency, in milliseconds, that the cleanup routine will be executed.
+    /// </summary>
     public int CleanupPeriod { get; set; } = 2_000;
+
+    /// <summary>
+    /// Number of file candidates to consider for deletion when threshold breached.
+    /// </summary>
+    public int CleanupBatchSize { get; set; } = 100;
 
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {

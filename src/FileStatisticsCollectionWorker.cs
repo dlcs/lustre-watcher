@@ -23,6 +23,8 @@ public class FileStatisticsCollectionWorker : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        _logger.LogInformation("FileStatisticsCollectionWorker starting");
+        
         // Build our initial view of the filesystem.
         await FilesystemWalker.Walk(_mountPoint, stoppingToken, file =>
         {
@@ -34,7 +36,7 @@ public class FileStatisticsCollectionWorker : BackgroundService
 
         if (_activeFiles.Count > 0)
         {
-            _logger.LogInformation("Created initial set of filesystem records: {InitialFiles}", _activeFiles);
+            _logger.LogInformation("Created initial set of {InitialFiles} filesystem records", _activeFiles.Count);
         }
         else
         {
