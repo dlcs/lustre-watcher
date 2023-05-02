@@ -17,7 +17,9 @@ try
                 .Bind(hostContext.Configuration)
                 .ValidateDataAnnotations();
 
-            services.AddSingleton<IFilesystemChangeWatcher, NativeFilesystemChangeWatcher>();
+            services.AddSingleton<IFilesystemChangeWatcher, NativeFilesystemChangeWatcher>(provider =>
+                ActivatorUtilities.CreateInstance<NativeFilesystemChangeWatcher>(provider, new FileSystemWatcher())
+            );
             services.AddSingleton(x => new SortedSet<FileRecord>(new LustreFileAccessTimeComparer()));
             services.AddHostedService<FileCleanupWorker>();
             services.AddHostedService<FileStatisticsCollectionWorker>();

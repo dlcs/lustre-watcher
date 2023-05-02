@@ -36,11 +36,9 @@ public class FileCleanupWorker : BackgroundService
         
         while (!stoppingToken.IsCancellationRequested)
         {
-            await Task.Delay(_configuration.CurrentValue.CleanupPeriod, stoppingToken);
-
             //if (!IsUnderFreeSpaceThreshold()) continue;
             
-            //var removalSet = new HashSet<FileRecord>();
+            var removalSet = new HashSet<FileRecord>();
             var haveActiveFiles = _activeFiles.Count > 0;
             while (!IsUnderFreeSpaceThreshold() && haveActiveFiles && !stoppingToken.IsCancellationRequested)
             {
@@ -59,10 +57,11 @@ public class FileCleanupWorker : BackgroundService
                 });
             }*/
 
-            /*lock (_activeFiles)
+            lock (_activeFiles)
             {
                 _activeFiles.RemoveWhere(item => removalSet.Contains(item));
-            }*/
+            }
+            await Task.Delay(_configuration.CurrentValue.CleanupPeriod, stoppingToken);
         }
         
         _logger.LogInformation("FileCleanupWorker stopping");
@@ -74,14 +73,15 @@ public class FileCleanupWorker : BackgroundService
         List<FileRecord> deleteCandidates;
         lock (_activeFiles)
         {
-            deleteCandidates = _activeFiles.TakeLast(_configuration.CurrentValue.CleanupBatchSize).ToList();
+            deleteCandidates = _activeFiles.Reverse().Take(_configuration.CurrentValue.CleanupBatchSize).ToList();
         }
 
         FileRecord? lastDeleted = null;
         var removalSet = new HashSet<FileRecord>();
+        var minimiseDeletions = _configuration.CurrentValue.MinimiseDeletions;
         foreach (var file in deleteCandidates)
         {
-            if (IsUnderFreeSpaceThreshold() || stoppingToken.IsCancellationRequested)
+            if ((minimiseDeletions && IsUnderFreeSpaceThreshold()) || stoppingToken.IsCancellationRequested)
             {
                 break;
             }
@@ -100,7 +100,7 @@ public class FileCleanupWorker : BackgroundService
         if (lastDeleted != null)
         {
             var age = DateTime.UtcNow - DateTime.FromFileTimeUtc(lastDeleted.AccessTime);
-            _logger.LogDebug("Oldest file deleted from batch was {AgeSecs}s", age.TotalSeconds);
+            _logger.LogDebug("Youngest file deleted from batch was {AgeSecs}s", age.TotalSeconds);
         }
     }
 }

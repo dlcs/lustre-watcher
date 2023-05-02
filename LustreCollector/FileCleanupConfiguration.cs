@@ -23,6 +23,12 @@ public class FileCleanupConfiguration : IValidatableObject
     /// Number of file candidates to consider for deletion when threshold breached.
     /// </summary>
     public int CleanupBatchSize { get; set; } = 100;
+    
+    /// <summary>
+    /// If true, size will be reassessed after every deletion to minimise number of files removed. Else the entire batch
+    /// of candidates will be removed before checking size.
+    /// </summary>
+    public bool MinimiseDeletions { get; set; }
 
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {
