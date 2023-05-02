@@ -20,7 +20,7 @@ try
             services.AddSingleton<IFileSystemChangeWatcher, NativeFileSystemChangeWatcher>(provider =>
                 ActivatorUtilities.CreateInstance<NativeFileSystemChangeWatcher>(provider, new FileSystemWatcher())
             );
-            services.AddSingleton(x => new SortedSet<FileRecord>(new LustreFileAccessTimeComparer()));
+            services.AddSingleton(x => new SortedSet<FileRecord>(new FileRecordComparer()));
             services.AddHostedService<FileCleanupWorker>();
             services.AddHostedService<FileStatisticsCollectionWorker>();
         })

@@ -1,6 +1,6 @@
 ﻿namespace LustreCollector.FileSystem;
 
-public class LustreFileAccessTimeComparer : IComparer<FileRecord>
+public class FileRecordComparer : IComparer<FileRecord>
 {
     public int Compare(FileRecord? x, FileRecord? y)
     {
