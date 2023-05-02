@@ -15,9 +15,9 @@ public class NativeFileSystemChangeWatcher : IFileSystemChangeWatcher
         _logger = logger;
     }
     
-    public IAsyncEnumerable<FilesystemChangeEvent> Watch(DirectoryInfo root)
+    public IAsyncEnumerable<FileSystemChangeEvent> Watch(DirectoryInfo root)
     {
-        var changes = Channel.CreateUnbounded<FilesystemChangeEvent>();
+        var changes = Channel.CreateUnbounded<FileSystemChangeEvent>();
         try
         {
             //var watcher = new FileSystemWatcher();
@@ -26,7 +26,7 @@ public class NativeFileSystemChangeWatcher : IFileSystemChangeWatcher
             watcher.Filter = "*.*";
             FileSystemEventHandler fsEventHandler = (sender, fsEvent) =>
             {
-                var change = FilesystemChangeEvent.FromNativeEvent(fsEvent);
+                var change = FileSystemChangeEvent.FromNativeEvent(fsEvent);
                 if (change != null && !changes.Writer.TryWrite(change))
                 {
                     // we're dropping changes because we can't process them fast enough
