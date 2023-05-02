@@ -9,6 +9,9 @@ public enum FileSystemChangeEventKind
     Accessed,
 }
 
+/// <summary>
+/// Represents a single file system change event
+/// </summary>
 public class FileSystemChangeEvent
 {
     public FileSystemChangeEventKind Kind { get; }
