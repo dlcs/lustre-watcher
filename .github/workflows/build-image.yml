@@ -16,9 +16,6 @@ jobs:
       - id: checkout
         uses: actions/checkout@v3
 
-      - id: nuget-restore
-        run: nuget restore $SOLUTION
-
       - id: setup-dotnet
         uses: actions/setup-dotnet@v3
         with:
