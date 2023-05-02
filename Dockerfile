@@ -1,18 +1,19 @@
-﻿FROM mcr.microsoft.com/dotnet/runtime:6.0 AS base
-WORKDIR /app
-
-FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
+﻿FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
 WORKDIR /src
-COPY ["LustreCollector.csproj", "./"]
-RUN dotnet restore "LustreCollector.csproj"
+COPY ["LustreCollector/LustreCollector.csproj", "LustreCollector/"]
+RUN dotnet restore "LustreCollector/LustreCollector.csproj"
+
 COPY . .
-WORKDIR "/src/"
+WORKDIR "/src/LustreCollector"
 RUN dotnet build "LustreCollector.csproj" -c Release -o /app/build
 
 FROM build AS publish
 RUN dotnet publish "LustreCollector.csproj" -c Release -o /app/publish
 
-FROM base AS final
+FROM mcr.microsoft.com/dotnet/runtime:6.0 AS base
+
+LABEL org.opencontainers.image.source=https://github.com/dlcs/lustre-watcher
+
 WORKDIR /app
 COPY --from=publish /app/publish .
 ENTRYPOINT ["dotnet", "LustreCollector.dll"]
