@@ -11,6 +11,9 @@ public class LustreFileAccessTimeComparer : IComparer<FileRecord>
     }
 }
 
+/// <summary>
+/// Represents a file change record 
+/// </summary>
 public record FileRecord(string FullPath, long AccessTime)
 {
     public virtual bool Equals(FileRecord? other)
