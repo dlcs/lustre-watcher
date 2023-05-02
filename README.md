@@ -19,8 +19,8 @@ There are currently 3 values that are configurable via appSettings:
   - The path, local to the container, where the filesystem to be monitored is located. NOTE: it's assumed this mount point encapsulates the entire filesystem. Mounting a subdirectory will create incorrect disk usage reports.
 - CleanupPeriod
   - The frequency, in milliseconds, that the cleanup routine will be executed. The cleanup routine will compare disk usage with a configured usage threshold and begin purging old files.
-- CleanupThreshold
-  - A value between [0, 100) representing a percentage of total disk space usage before considering cleanup. For example, a value of 10 will begin cleanup when there is 10% or less free space available.  
+- FreeSpaceThreshold
+  - A value between (1, 100) representing the % of available free space beyond which scavenging will take place. For example, a value of 10 will begin cleanup when there is 10% or less free space available.
 - CleanupBatchSize
   - During a cleanup operation, files are deleted in batches of this size. Cleanup will stop when free space below threshold. NOTE: We cannot iterate the full set as the change watcher can edit at the same time.
 - MinimiseDeletions

@@ -10,9 +10,9 @@ public class FileCleanupConfiguration : IValidatableObject
     public string MountPoint { get; set; }
     
     /// <summary>
-    /// A value between [0, 100) representing a percentage of total disk space usage before considering cleanup.
+    /// A value between (1, 100) representing the % of available free space beyond which scavenging will take place
     /// </summary>
-    public int CleanupThreshold { get; set; } = 10;
+    public int FreeSpaceThreshold { get; set; } = 10;
     
     /// <summary>
     /// The frequency, in milliseconds, that the cleanup routine will be executed.
@@ -47,7 +47,7 @@ public class FileCleanupConfiguration : IValidatableObject
             yield return new ValidationResult("MountPoint must exist");
         }
 
-        var cleanupThresholdValid = CleanupThreshold is > 1 and < 100;
+        var cleanupThresholdValid = FreeSpaceThreshold is > 1 and < 100;
         valid &= cleanupThresholdValid;
 
         if (!cleanupThresholdValid)

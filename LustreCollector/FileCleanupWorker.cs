@@ -25,15 +25,15 @@ public class FileCleanupWorker : BackgroundService
         _logger = logger;
     }
 
-    private bool IsUnderFreeSpaceThreshold()
+    private bool HaveEnoughFreeSpace()
     {
         var configurationCurrentValue = _configuration.CurrentValue;
         var mountInfo = new DriveInfo(configurationCurrentValue.MountPoint);
         var mountInfoAvailableFreeSpace = (float)mountInfo.AvailableFreeSpace / mountInfo.TotalSize * 100;
 
         _logger.LogTrace("Free space available: {AvailableSpace}%, threshold: {CleanupThreshold}%",
-            mountInfoAvailableFreeSpace, configurationCurrentValue.CleanupThreshold);
-        return mountInfoAvailableFreeSpace < configurationCurrentValue.CleanupThreshold;
+            mountInfoAvailableFreeSpace, configurationCurrentValue.FreeSpaceThreshold);
+        return mountInfoAvailableFreeSpace > configurationCurrentValue.FreeSpaceThreshold;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -51,7 +51,7 @@ public class FileCleanupWorker : BackgroundService
                 haveActiveFiles = _activeFiles.Count > 0;    
             }
             
-            while (!IsUnderFreeSpaceThreshold() && haveActiveFiles && !stoppingToken.IsCancellationRequested)
+            while (!HaveEnoughFreeSpace() && haveActiveFiles && !stoppingToken.IsCancellationRequested)
             {
                 CleanupStaleFiles(stoppingToken);
                 lock (_activeFiles)
@@ -84,7 +84,7 @@ public class FileCleanupWorker : BackgroundService
         var minimiseDeletions = _configuration.CurrentValue.MinimiseDeletions;
         foreach (var file in deleteCandidates)
         {
-            if ((minimiseDeletions && IsUnderFreeSpaceThreshold()) || stoppingToken.IsCancellationRequested)
+            if ((minimiseDeletions && HaveEnoughFreeSpace()) || stoppingToken.IsCancellationRequested)
             {
                 break;
             }
