@@ -110,12 +110,28 @@ public class FileCleanupWorker : BackgroundService
     {
         try
         {
-            File.Delete(file.FullPath);
+            var fileInfo = new FileInfo(file.FullPath);
+            var di = fileInfo.Directory;
+            fileInfo.Delete();
             removalSet.Add(file);
+
+            // Walk up, deleting dirs until there are no more
+            while (di != null
+                   && di.FullName != _configuration.CurrentValue.MountPoint
+                   && !di.EnumerateFiles().Any()
+                   && !di.EnumerateDirectories().Any())
+            {
+                di.Delete();
+                di = di.Parent;
+            }
         }
         catch (UnauthorizedAccessException)
         {
             _logger.LogError("UnauthorizedAccessException deleting file {FilePath}", file.FullPath);
+        }
+        catch (DirectoryNotFoundException)
+        {
+            removalSet.Add(file);
         }
         catch (Exception ex)
         {
