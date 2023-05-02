@@ -30,6 +30,11 @@ public class FileCleanupConfiguration : IValidatableObject
     /// </summary>
     public bool MinimiseDeletions { get; set; }
 
+    /// <summary>
+    /// InternalBuffer size for FileSystemWatcher, in bytes. Valid values: 4KB -> 64KB
+    /// </summary>
+    public int FileWatcherBufferSize { get; set; } = 65536;
+
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {
         var valid = true;

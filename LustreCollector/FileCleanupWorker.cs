@@ -3,18 +3,24 @@ using Microsoft.Extensions.Options;
 
 namespace LustreCollector;
 
+/// <summary>
+/// This class periodically checks free disk space - if threshold breached then it will delete files to clear disk space
+/// </summary>
 public class FileCleanupWorker : BackgroundService
 {
     private readonly SortedSet<FileRecord> _activeFiles;
+    private readonly FileSystemWalker _fileSystemWalker;
     private readonly IOptionsMonitor<FileCleanupConfiguration> _configuration;
     private readonly ILogger<FileCleanupWorker> _logger;
 
     public FileCleanupWorker(
         SortedSet<FileRecord> activeFiles,
+        FileSystemWalker fileSystemWalker,
         IOptionsMonitor<FileCleanupConfiguration> configuration,
         ILogger<FileCleanupWorker> logger)
     {
         _activeFiles = activeFiles;
+        _fileSystemWalker = fileSystemWalker;
         _configuration = configuration;
         _logger = logger;
     }
@@ -36,32 +42,29 @@ public class FileCleanupWorker : BackgroundService
         
         while (!stoppingToken.IsCancellationRequested)
         {
-            //if (!IsUnderFreeSpaceThreshold()) continue;
+            await Task.Delay(_configuration.CurrentValue.CleanupPeriod, stoppingToken);
             
-            var removalSet = new HashSet<FileRecord>();
-            var haveActiveFiles = _activeFiles.Count > 0;
+            // Check if there are known files that could be deleted - avoids infinite loop
+            bool haveActiveFiles;
+            lock (_activeFiles)
+            {
+                haveActiveFiles = _activeFiles.Count > 0;    
+            }
+            
             while (!IsUnderFreeSpaceThreshold() && haveActiveFiles && !stoppingToken.IsCancellationRequested)
             {
                 CleanupStaleFiles(stoppingToken);
-            }
-
-            /*if (!haveActiveFiles)
-            {
-                _logger.LogInformation("No active files, trying to walk files again");
-                await FilesystemWalker.Walk(_configuration.CurrentValue.MountPoint, stoppingToken, file =>
+                lock (_activeFiles)
                 {
-                    lock (_activeFiles)
-                    {
-                        _activeFiles.Add(file);
-                    }
-                });
-            }*/
-
-            lock (_activeFiles)
-            {
-                _activeFiles.RemoveWhere(item => removalSet.Contains(item));
+                    haveActiveFiles = _activeFiles.Count > 0;    
+                }
             }
-            await Task.Delay(_configuration.CurrentValue.CleanupPeriod, stoppingToken);
+
+            if (!haveActiveFiles)
+            {
+                _logger.LogWarning("No active files, trying to walk files again - has watcher stopped?");
+                _fileSystemWalker.Walk(stoppingToken);
+            }
         }
         
         _logger.LogInformation("FileCleanupWorker stopping");
@@ -88,8 +91,7 @@ public class FileCleanupWorker : BackgroundService
 
             _logger.LogTrace("Deleting file {FilePath}", file.FullPath);
             lastDeleted = file;
-            File.Delete(file.FullPath);
-            removalSet.Add(file);
+            DeleteFile(file, removalSet);
         }
         
         lock (_activeFiles)
@@ -101,6 +103,23 @@ public class FileCleanupWorker : BackgroundService
         {
             var age = DateTime.UtcNow - DateTime.FromFileTimeUtc(lastDeleted.AccessTime);
             _logger.LogDebug("Youngest file deleted from batch was {AgeSecs}s", age.TotalSeconds);
+        }
+    }
+
+    private void DeleteFile(FileRecord file, HashSet<FileRecord> removalSet)
+    {
+        try
+        {
+            File.Delete(file.FullPath);
+            removalSet.Add(file);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            _logger.LogError("UnauthorizedAccessException deleting file {FilePath}", file.FullPath);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error deleting file {FilePath}", file.FullPath);
         }
     }
 }

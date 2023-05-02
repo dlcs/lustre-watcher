@@ -16,13 +16,13 @@ try
             services.AddOptions<FileCleanupConfiguration>()
                 .Bind(hostContext.Configuration)
                 .ValidateDataAnnotations();
-
-            services.AddSingleton<IFileSystemChangeWatcher, NativeFileSystemChangeWatcher>(provider =>
-                ActivatorUtilities.CreateInstance<NativeFileSystemChangeWatcher>(provider, new FileSystemWatcher())
-            );
-            services.AddSingleton(x => new SortedSet<FileRecord>(new FileRecordComparer()));
-            services.AddHostedService<FileCleanupWorker>();
-            services.AddHostedService<FileStatisticsCollectionWorker>();
+            
+            services
+                .AddSingleton<FileSystemWalker>()
+                .AddSingleton<IFileSystemChangeWatcher, NativeFileSystemChangeWatcher>()
+                .AddSingleton(_ => new SortedSet<FileRecord>(new FileRecordComparer()))
+                .AddHostedService<FileCleanupWorker>()
+                .AddHostedService<FileStatisticsCollectionWorker>();
         })
         .UseSerilog((hostContext, loggerConfiguration)
             => loggerConfiguration

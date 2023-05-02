@@ -1,53 +1,65 @@
 using System.Threading.Channels;
+using Microsoft.Extensions.Options;
 
 namespace LustreCollector.FileSystem;
 
+/// <summary>
+/// Uses <see cref="FileSystemWatcher"/> to monitor underlying filesystem for changes 
+/// </summary>
 public class NativeFileSystemChangeWatcher : IFileSystemChangeWatcher
 {
-    private readonly FileSystemWatcher watcher;
+    private readonly FileSystemWatcher _watcher;
     private readonly ILogger<NativeFileSystemChangeWatcher> _logger;
+    private readonly Channel<FileSystemChangeEvent> _changes;
 
     public NativeFileSystemChangeWatcher(
-        FileSystemWatcher watcher,
+        IOptionsMonitor<FileCleanupConfiguration> config,
         ILogger<NativeFileSystemChangeWatcher> logger)
     {
-        this.watcher = watcher;
         _logger = logger;
+        _watcher = CreateFileSystemWatcher(config.CurrentValue);
+        _changes = Channel.CreateUnbounded<FileSystemChangeEvent>();
+    }
+
+    public IAsyncEnumerable<FileSystemChangeEvent> Watch(CancellationToken cancellationToken)
+    {
+        _watcher.Disposed += FsDisposedHandler; 
+        _watcher.Error += FsErrorHandler;
+        _watcher.Changed += FsEventHandler;
+        _watcher.Deleted += FsEventHandler;
+        _watcher.EnableRaisingEvents = true;
+
+        return _changes.Reader.ReadAllAsync(cancellationToken);
+    }
+
+    private FileSystemWatcher CreateFileSystemWatcher(FileCleanupConfiguration config)
+    {
+        var watcher = new FileSystemWatcher(config.MountPoint, "*.*");
+        watcher.InternalBufferSize = config.FileWatcherBufferSize;
+        watcher.NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.LastAccess;
+        watcher.IncludeSubdirectories = true;
+        return watcher;
     }
     
-    public IAsyncEnumerable<FileSystemChangeEvent> Watch(DirectoryInfo root)
+    private void FsEventHandler(object sender, FileSystemEventArgs fsEvent)
     {
-        var changes = Channel.CreateUnbounded<FileSystemChangeEvent>();
-        try
+        var change = FileSystemChangeEvent.FromNativeEvent(fsEvent);
+        if (change != null)
         {
-            //var watcher = new FileSystemWatcher();
-            watcher.Path = root.FullName;
-            watcher.NotifyFilter = NotifyFilters.LastWrite;
-            watcher.Filter = "*.*";
-            FileSystemEventHandler fsEventHandler = (sender, fsEvent) =>
-            {
-                var change = FileSystemChangeEvent.FromNativeEvent(fsEvent);
-                if (change != null && !changes.Writer.TryWrite(change))
-                {
-                    // we're dropping changes because we can't process them fast enough
-                    _logger.LogWarning("Unable to log {Change}, ChannelWriter failed write", change);
-                }
-            };
-            watcher.Disposed += (sender, args) => _logger.LogInformation("Watcher disposed");
-            watcher.Error += (sender, args) => _logger.LogWarning("*****uh-oh");
-            watcher.InternalBufferSize = 65536;
-            watcher.Changed += fsEventHandler;
-            watcher.Deleted += fsEventHandler;
-
-            watcher.IncludeSubdirectories = true;
-            watcher.EnableRaisingEvents = true;
-
-            return changes.Reader.ReadAllAsync();
+            _changes.Writer.TryWrite(change);
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "FSW err");
-            throw;
-        }
+    }
+
+    private void FsErrorHandler(object sender, ErrorEventArgs args)
+    {
+        var exception = args.GetException();
+        _logger.LogError(exception, "FileSystemWatcher error");
+        throw exception;
+    }
+
+    private void FsDisposedHandler(object? sender, EventArgs args)
+    {
+        _logger.LogInformation("FileSystemWatcher disposed");
+        throw new ApplicationException("FileSystemWatcher disposed");
     }
 }

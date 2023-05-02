@@ -1,49 +1,37 @@
 using LustreCollector.FileSystem;
-using Microsoft.Extensions.Options;
 
 namespace LustreCollector;
 
+/// <summary>
+/// Monitors folder for changes raised by <see cref="IFileSystemChangeWatcher"/>
+/// </summary>
 public class FileStatisticsCollectionWorker : BackgroundService
 {
     private readonly ILogger<FileStatisticsCollectionWorker> _logger;
-    private readonly string _mountPoint;
     private readonly IFileSystemChangeWatcher _changeWatcher;
+    private readonly FileSystemWalker _fileSystemWalker;
 
     private readonly SortedSet<FileRecord> _activeFiles;
 
-    public FileStatisticsCollectionWorker(ILogger<FileStatisticsCollectionWorker> logger,
-        SortedSet<FileRecord> activeFiles, IOptionsMonitor<FileCleanupConfiguration> config,
-        IFileSystemChangeWatcher changeWatcher)
+    public FileStatisticsCollectionWorker(
+        SortedSet<FileRecord> activeFiles, 
+        IFileSystemChangeWatcher changeWatcher,
+        FileSystemWalker fileSystemWalker,
+        ILogger<FileStatisticsCollectionWorker> logger)
     {
         _logger = logger;
         _activeFiles = activeFiles;
-        _mountPoint = config.CurrentValue.MountPoint;
         _changeWatcher = changeWatcher;
+        _fileSystemWalker = fileSystemWalker;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         _logger.LogInformation("FileStatisticsCollectionWorker starting");
         
-        // Build our initial view of the filesystem.
-        await FileSystemWalker.Walk(_mountPoint, stoppingToken, file =>
-        {
-            lock (_activeFiles)
-            {
-                _activeFiles.Add(file);
-            }
-        });
+        BuildInitialView(stoppingToken);
 
-        if (_activeFiles.Count > 0)
-        {
-            _logger.LogInformation("Created initial set of {InitialFiles} filesystem records", _activeFiles.Count);
-        }
-        else
-        {
-            _logger.LogInformation("Filesystem is empty. Created empty set of filesystem records");
-        }
-
-        await foreach (var change in _changeWatcher.Watch(new DirectoryInfo(_mountPoint)).WithCancellation(stoppingToken))
+        await foreach (var change in _changeWatcher.Watch(stoppingToken))
         {
             var fileRecord = new FileRecord(change.Path, DateTime.UtcNow.ToFileTimeUtc());
             lock (_activeFiles)
@@ -62,5 +50,26 @@ public class FileStatisticsCollectionWorker : BackgroundService
         }
         
         _logger.LogInformation("FileStatisticsCollectionWorker stopping");
+    }
+
+    private void BuildInitialView(CancellationToken stoppingToken)
+    {
+        _fileSystemWalker.Walk(stoppingToken);
+
+        var activeFileCount = 0;
+        lock (_activeFiles)
+        {
+            activeFileCount = _activeFiles.Count;
+        }
+
+        if (activeFileCount > 0)
+        {
+            _logger.LogInformation("Created initial set of {InitialFiles} filesystem records",
+                activeFileCount);
+        }
+        else
+        {
+            _logger.LogInformation("Filesystem is empty. Created empty set of filesystem records");
+        }
     }
 }
