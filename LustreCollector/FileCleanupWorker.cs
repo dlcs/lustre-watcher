@@ -31,7 +31,7 @@ public class FileCleanupWorker : BackgroundService
         var mountInfo = new DriveInfo(configurationCurrentValue.MountPoint);
         var mountInfoAvailableFreeSpace = (float)mountInfo.AvailableFreeSpace / mountInfo.TotalSize * 100;
 
-        _logger.LogTrace("Free space available: {AvailableSpace}%, threshold: {CleanupThreshold}%",
+        _logger.LogDebug("Free space available: {AvailableSpace}%, threshold: {CleanupThreshold}%",
             mountInfoAvailableFreeSpace, configurationCurrentValue.FreeSpaceThreshold);
         return mountInfoAvailableFreeSpace > configurationCurrentValue.FreeSpaceThreshold;
     }

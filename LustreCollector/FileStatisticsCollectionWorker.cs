@@ -38,12 +38,12 @@ public class FileStatisticsCollectionWorker : BackgroundService
             {
                 if (change.Kind is FileSystemChangeEventKind.Accessed or FileSystemChangeEventKind.Created)
                 {
-                    _logger.LogDebug("File Record added {FileRecord}", fileRecord);
+                    _logger.LogTrace("File Record added {FileRecord}", fileRecord);
                     _activeFiles.Add(fileRecord);
                 }
                 else
                 {
-                    _logger.LogDebug("File Record removed {FileRecord}", fileRecord);
+                    _logger.LogTrace("File Record removed {FileRecord}", fileRecord);
                     _activeFiles.Remove(fileRecord);
                 }
             }
