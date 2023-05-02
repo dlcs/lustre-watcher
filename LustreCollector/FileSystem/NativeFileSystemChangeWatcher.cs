@@ -1,15 +1,15 @@
 using System.Threading.Channels;
 
-namespace LustreCollector.Filesystem;
+namespace LustreCollector.FileSystem;
 
-public class NativeFilesystemChangeWatcher : IFilesystemChangeWatcher
+public class NativeFileSystemChangeWatcher : IFileSystemChangeWatcher
 {
     private readonly FileSystemWatcher watcher;
-    private readonly ILogger<NativeFilesystemChangeWatcher> _logger;
+    private readonly ILogger<NativeFileSystemChangeWatcher> _logger;
 
-    public NativeFilesystemChangeWatcher(
+    public NativeFileSystemChangeWatcher(
         FileSystemWatcher watcher,
-        ILogger<NativeFilesystemChangeWatcher> logger)
+        ILogger<NativeFileSystemChangeWatcher> logger)
     {
         this.watcher = watcher;
         _logger = logger;

@@ -1,4 +1,4 @@
-using LustreCollector.Filesystem;
+using LustreCollector.FileSystem;
 using Microsoft.Extensions.Options;
 
 namespace LustreCollector;

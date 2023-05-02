@@ -1,8 +1,8 @@
-using static LustreCollector.Filesystem.FilesystemChangeEventKind;
+using static LustreCollector.FileSystem.FileSystemChangeEventKind;
 
-namespace LustreCollector.Filesystem;
+namespace LustreCollector.FileSystem;
 
-public enum FilesystemChangeEventKind
+public enum FileSystemChangeEventKind
 {
     Created,
     Deleted,
@@ -11,10 +11,10 @@ public enum FilesystemChangeEventKind
 
 public class FilesystemChangeEvent
 {
-    public FilesystemChangeEventKind Kind { get; }
+    public FileSystemChangeEventKind Kind { get; }
     public string Path { get; }
 
-    public FilesystemChangeEvent(FilesystemChangeEventKind kind, string path)
+    public FilesystemChangeEvent(FileSystemChangeEventKind kind, string path)
     {
         Kind = kind;
         Path = path;

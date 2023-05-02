@@ -1,4 +1,4 @@
-using LustreCollector.Filesystem;
+using LustreCollector.FileSystem;
 using Microsoft.Extensions.Options;
 
 namespace LustreCollector;
@@ -7,13 +7,13 @@ public class FileStatisticsCollectionWorker : BackgroundService
 {
     private readonly ILogger<FileStatisticsCollectionWorker> _logger;
     private readonly string _mountPoint;
-    private readonly IFilesystemChangeWatcher _changeWatcher;
+    private readonly IFileSystemChangeWatcher _changeWatcher;
 
     private readonly SortedSet<FileRecord> _activeFiles;
 
     public FileStatisticsCollectionWorker(ILogger<FileStatisticsCollectionWorker> logger,
         SortedSet<FileRecord> activeFiles, IOptionsMonitor<FileCleanupConfiguration> config,
-        IFilesystemChangeWatcher changeWatcher)
+        IFileSystemChangeWatcher changeWatcher)
     {
         _logger = logger;
         _activeFiles = activeFiles;
@@ -26,7 +26,7 @@ public class FileStatisticsCollectionWorker : BackgroundService
         _logger.LogInformation("FileStatisticsCollectionWorker starting");
         
         // Build our initial view of the filesystem.
-        await FilesystemWalker.Walk(_mountPoint, stoppingToken, file =>
+        await FileSystemWalker.Walk(_mountPoint, stoppingToken, file =>
         {
             lock (_activeFiles)
             {
@@ -48,7 +48,7 @@ public class FileStatisticsCollectionWorker : BackgroundService
             var fileRecord = new FileRecord(change.Path, DateTime.UtcNow.ToFileTimeUtc());
             lock (_activeFiles)
             {
-                if (change.Kind is FilesystemChangeEventKind.Accessed or FilesystemChangeEventKind.Created)
+                if (change.Kind is FileSystemChangeEventKind.Accessed or FileSystemChangeEventKind.Created)
                 {
                     _logger.LogDebug("File Record added {FileRecord}", fileRecord);
                     _activeFiles.Add(fileRecord);

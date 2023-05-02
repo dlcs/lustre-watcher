@@ -1,6 +1,6 @@
-namespace LustreCollector.Filesystem;
+namespace LustreCollector.FileSystem;
 
-public interface IFilesystemChangeWatcher
+public interface IFileSystemChangeWatcher
 {
     public IAsyncEnumerable<FilesystemChangeEvent> Watch(DirectoryInfo root);
 }

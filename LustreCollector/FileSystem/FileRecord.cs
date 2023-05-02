@@ -1,4 +1,4 @@
-﻿namespace LustreCollector.Filesystem;
+﻿namespace LustreCollector.FileSystem;
 
 public class LustreFileAccessTimeComparer : IComparer<FileRecord>
 {

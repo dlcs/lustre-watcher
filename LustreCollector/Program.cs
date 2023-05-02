@@ -1,5 +1,5 @@
 using LustreCollector;
-using LustreCollector.Filesystem;
+using LustreCollector.FileSystem;
 using Serilog;
 
 Log.Logger = new LoggerConfiguration()
@@ -17,8 +17,8 @@ try
                 .Bind(hostContext.Configuration)
                 .ValidateDataAnnotations();
 
-            services.AddSingleton<IFilesystemChangeWatcher, NativeFilesystemChangeWatcher>(provider =>
-                ActivatorUtilities.CreateInstance<NativeFilesystemChangeWatcher>(provider, new FileSystemWatcher())
+            services.AddSingleton<IFileSystemChangeWatcher, NativeFileSystemChangeWatcher>(provider =>
+                ActivatorUtilities.CreateInstance<NativeFileSystemChangeWatcher>(provider, new FileSystemWatcher())
             );
             services.AddSingleton(x => new SortedSet<FileRecord>(new LustreFileAccessTimeComparer()));
             services.AddHostedService<FileCleanupWorker>();

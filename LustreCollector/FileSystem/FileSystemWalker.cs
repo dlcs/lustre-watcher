@@ -1,6 +1,6 @@
-﻿namespace LustreCollector.Filesystem;
+﻿namespace LustreCollector.FileSystem;
 
-public class FilesystemWalker
+public class FileSystemWalker
 {
     public static async Task Walk(string mountPoint, CancellationToken stoppingToken, Action<FileRecord> processor)
     {
