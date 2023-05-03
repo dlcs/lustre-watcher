@@ -1,6 +1,6 @@
-﻿namespace LustreCollector;
+﻿namespace LustreCollector.FileSystem;
 
-public class LustreFileAccessTimeComparer : IComparer<FileRecord>
+public class FileRecordComparer : IComparer<FileRecord>
 {
     public int Compare(FileRecord? x, FileRecord? y)
     {
@@ -11,6 +11,9 @@ public class LustreFileAccessTimeComparer : IComparer<FileRecord>
     }
 }
 
+/// <summary>
+/// Represents a file change record 
+/// </summary>
 public record FileRecord(string FullPath, long AccessTime)
 {
     public virtual bool Equals(FileRecord? other)
