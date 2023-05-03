@@ -33,6 +33,9 @@ public class FileCleanupConfiguration : IValidatableObject
     /// <summary>
     /// InternalBuffer size for FileSystemWatcher, in bytes. Valid values: 4KB -> 64KB
     /// </summary>
+    /// <remarks>
+    /// See: https://learn.microsoft.com/en-us/dotnet/api/system.io.filesystemwatcher.internalbuffersize
+    /// </remarks>
     public int FileWatcherBufferSize { get; set; } = 65536;
 
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
