@@ -36,7 +36,7 @@ public class NativeFileSystemChangeWatcher : IFileSystemChangeWatcher
     {
         var watcher = new FileSystemWatcher(config.MountPoint, "*.*");
         watcher.InternalBufferSize = config.FileWatcherBufferSize;
-        watcher.NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.LastAccess;
+        watcher.NotifyFilter = NotifyFilters.LastWrite;
         watcher.IncludeSubdirectories = true;
         return watcher;
     }
